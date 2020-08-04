@@ -148,18 +148,24 @@ class ProcessPool(object):
         self._calls.pop(child, None)
         self._finishCallbacks.pop(child, None)
 
+    def fatal(self, reason, child):
+        log.error(
+            u'FATAL: Process exited.\n\t{r}', r=reason.getErrorMessage()
+        )
+
+    def dieGently(self, data, child):
+        log.info(u'STOPPING: {s}', s=data)
+
     def _addProcess(self, child, finished):
         """
         Adds the newly created child process to the pool.
         """
         def fatal(reason, child):
-            log.error(
-                u'FATAL: Process exited.\n\t{r}', r=reason.getErrorMessage()
-            )
+            self.fatal(reason, child)
             self._pruneProcess(child)
 
         def dieGently(data, child):
-            log.info(u'STOPPING: {s}', s=data)
+            self.dieGently(data, child)
             self._pruneProcess(child)
 
         self.processes.add(child)
