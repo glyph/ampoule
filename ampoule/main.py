@@ -82,9 +82,16 @@ class AMPConnector(protocol.ProcessProtocol):
             self.transport.writeToChild(TO_CHILD, data)
 
     def loseConnection(self):
+        if self.disconnecting:
+            return
+        self.disconnecting = True
         self.transport.closeChildFD(TO_CHILD)
         self.transport.closeChildFD(FROM_CHILD)
         self.transport.loseConnection()
+        
+    def childConnectionLost(self, childFD):
+        if childFD in {TO_CHILD, FROM_CHILD}:
+            self.loseConnection()
 
     def getPeer(self):
         return ('subprocess',)
